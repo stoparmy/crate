@@ -19,6 +19,10 @@ if (!major || !minor) {
 
 const image = `ghcr.io/${repository.toLowerCase()}`;
 const tags = [`${image}:${version}`, `${image}:${major}.${minor}`, `${image}:${major}`, `${image}:latest`];
+const platforms = (process.env.DOCKER_PLATFORMS || "linux/amd64,linux/arm64")
+  .split(",")
+  .map((platform) => platform.trim())
+  .filter(Boolean);
 const labels = [
   "org.opencontainers.image.source=https://github.com/" + repository,
   "org.opencontainers.image.revision=" + (process.env.GITHUB_SHA || ""),
@@ -29,10 +33,12 @@ const args = [
   "buildx",
   "build",
   "--push",
+  "--platform",
+  platforms.join(","),
   ...tags.flatMap((tag) => ["--tag", tag]),
   ...labels.flatMap((label) => ["--label", label]),
   ".",
 ];
 
-console.log(`Publishing ${image} for release ${version}`);
+console.log(`Publishing ${image} for release ${version} on ${platforms.join(", ")}`);
 execFileSync("docker", args, { stdio: "inherit", env: process.env });
