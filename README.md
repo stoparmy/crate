@@ -1,48 +1,48 @@
-# Crate for Chatwoot
+# Crate для Chatwoot
 
-Crate is an embedded Chatwoot dashboard app for browsing conversation attachments. Agents can open files in a new tab and download all attachments from the current conversation.
+Crate — это встроенное dashboard-приложение для Chatwoot, которое показывает вложения из текущего диалога. Агент может открыть файл в новой вкладке и скачать все вложения текущего разговора.
 
-## Docker Image
+## Docker-образ
 
-Crate is published as a Docker image:
+Crate публикуется как Docker-образ:
 
 ```text
 ghcr.io/stoparmy/crate
 ```
 
-The image is runtime-slug aware. You can mount it at `/crate/`, `/attachments/`, or another fixed slug on the same Chatwoot host.
+Образ поддерживает произвольный slug во время запуска. Его можно смонтировать на `/crate/`, `/attachments/` или другом фиксированном пути на том же хосте, где работает Chatwoot.
 
-## Configuration
+## Конфигурация
 
-Copy `.env.example` to `.env` and set:
+Скопируйте `.env.example` в `.env` и задайте:
 
-- `CHATWOOT_BASE_URL`: public Chatwoot base URL, for example `https://helpdesk.example.org`
-- `CHATWOOT_APP_TOKEN`: Chatwoot app token for the installed Crate dashboard app
-- `PORT`: optional server port, defaults to `3000`
+- `CHATWOOT_BASE_URL`: публичный URL Chatwoot, например `https://helpdesk.example.org`
+- `CHATWOOT_APP_TOKEN`: токен приложения Chatwoot для установленного dashboard-приложения Crate
+- `PORT`: необязательный порт сервера, по умолчанию `3000`
 
-## Local Development
+## Локальная разработка
 
-Install dependencies:
+Установите зависимости:
 
 ```bash
 cd server && npm install
 cd ../web && npm install
 ```
 
-Build the app:
+Соберите приложение:
 
 ```bash
 cd server && npm run build
 cd ../web && npm run build
 ```
 
-Run it with Docker Compose:
+Запуск через Docker Compose:
 
 ```bash
 docker compose up --build
 ```
 
-Run the published image directly:
+Запуск опубликованного образа напрямую:
 
 ```bash
 docker run --rm -p 3000:3000 \
@@ -51,26 +51,26 @@ docker run --rm -p 3000:3000 \
   ghcr.io/stoparmy/crate:latest
 ```
 
-Health check:
+Проверка состояния:
 
 ```text
 GET /api/health
 ```
 
-## Chatwoot Embedding
+## Встраивание в Chatwoot
 
-Crate runs behind the same origin as Chatwoot and receives dashboard context from the parent app.
+Crate работает за тем же origin, что и Chatwoot, и получает контекст dashboard из родительского приложения.
 
-It relies on:
+Для работы используются:
 
-- the `cw_d_session_info` cookie
+- cookie `cw_d_session_info`
 - `CHATWOOT_APP_TOKEN`
-- the Chatwoot dashboard auth headers `access-token`, `token-type`, `client`, `expiry`, and `uid`
-- Chatwoot `postMessage` context for the active conversation
+- заголовки авторизации Chatwoot dashboard: `access-token`, `token-type`, `client`, `expiry` и `uid`
+- контекст активного диалога через `postMessage` из Chatwoot
 
-When reverse proxying, forward the chosen slug to the Crate container and keep the trailing-slash redirect so relative asset and API paths resolve correctly.
+При обратном проксировании направьте выбранный slug на контейнер Crate и сохраните редирект на путь с завершающим `/`, чтобы относительные пути к ассетам и API разрешались корректно.
 
-Example nginx config:
+Пример конфигурации nginx:
 
 ```nginx
 location = /crate {
@@ -89,20 +89,20 @@ location /crate/ {
 }
 ```
 
-The same example is available at `examples/nginx/chatwoot-crate.conf`.
+Тот же пример есть в `examples/nginx/chatwoot-crate.conf`.
 
-## Releases
+## Релизы
 
-GitHub Actions runs `semantic-release` from `.github/workflows/publish-image.yml`.
+GitHub Actions запускает `semantic-release` из `.github/workflows/publish-image.yml`.
 
-Each release creates:
+Каждый релиз создает:
 
-- a GitHub release
-- a `latest` image tag
-- semver image tags such as `<major>`, `<major>.<minor>`, and `<major>.<minor>.<patch>`
+- релиз на GitHub
+- тег образа `latest`
+- semver-теги образа, например `<major>`, `<major>.<minor>` и `<major>.<minor>.<patch>`
 
-Release versions come from Conventional Commit messages on `main`:
+Версия релиза определяется по Conventional Commit сообщениям в `main`:
 
-- `fix:` for patch releases
-- `feat:` for minor releases
-- `BREAKING CHANGE:` or `!` for major releases
+- `fix:` для patch-релизов
+- `feat:` для minor-релизов
+- `BREAKING CHANGE:` или `!` для major-релизов
