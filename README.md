@@ -1,23 +1,18 @@
 # Crate for Chatwoot
 
-Crate is an embedded Chatwoot dashboard app that lists attachments for the currently open conversation and lets agents:
+Crate is an embedded Chatwoot dashboard app for browsing conversation attachments. Agents can open files in a new tab and download all attachments from the current conversation.
 
-- open attachments in a new tab
-- download all attachments from the current conversation
+## Docker Image
 
-## Release Model
-
-The default distribution target is a Docker image published to GitHub Container Registry:
+Crate is published as a Docker image:
 
 ```text
 ghcr.io/stoparmy/crate
 ```
 
-Published images are runtime-slug aware. The same image can be mounted at `/crate/`, `/shared-attachments/`, or another fixed slug on the same host as Chatwoot.
+The image is runtime-slug aware. You can mount it at `/crate/`, `/attachments/`, or another fixed slug on the same Chatwoot host.
 
-Releases are managed with `semantic-release`. A qualifying commit pushed to `main` creates a GitHub release and publishes matching Docker image tags.
-
-## Environment
+## Configuration
 
 Copy `.env.example` to `.env` and set:
 
@@ -27,26 +22,21 @@ Copy `.env.example` to `.env` and set:
 
 ## Local Development
 
-Install and run each package separately:
+Install dependencies:
 
 ```bash
 cd server && npm install
 cd ../web && npm install
 ```
 
-Build the server:
+Build the app:
 
 ```bash
 cd server && npm run build
+cd ../web && npm run build
 ```
 
-Build the web app:
-
-```bash
-cd web && npm run build
-```
-
-Run the production container locally:
+Run it with Docker Compose:
 
 ```bash
 docker compose up --build
@@ -61,22 +51,26 @@ docker run --rm -p 3000:3000 \
   ghcr.io/stoparmy/crate:latest
 ```
 
-The health endpoint is `GET /api/health`.
+Health check:
 
-## Embedding in Chatwoot
+```text
+GET /api/health
+```
 
-Crate expects to run behind the same origin as Chatwoot, mounted at a fixed slug. The slug is chosen at deploy time by your reverse proxy, not at image build time.
+## Chatwoot Embedding
 
-The embedded dashboard flow relies on:
+Crate runs behind the same origin as Chatwoot and receives dashboard context from the parent app.
+
+It relies on:
 
 - the `cw_d_session_info` cookie
-- the configured `CHATWOOT_APP_TOKEN`
+- `CHATWOOT_APP_TOKEN`
 - the Chatwoot dashboard auth headers `access-token`, `token-type`, `client`, `expiry`, and `uid`
-- Chatwoot `postMessage` context for the currently open conversation
+- Chatwoot `postMessage` context for the active conversation
 
-When reverse proxying, forward the chosen slug directly to the Crate container. The app derives asset and API paths from its mounted URL at runtime.
+When reverse proxying, forward the chosen slug to the Crate container and keep the trailing-slash redirect so relative asset and API paths resolve correctly.
 
-Example nginx location block:
+Example nginx config:
 
 ```nginx
 location = /crate {
@@ -97,30 +91,18 @@ location /crate/ {
 
 The same example is available at `examples/nginx/chatwoot-crate.conf`.
 
-If you want a different slug, replace `/crate/` consistently in your proxy config. Keep the redirect from `/slug` to `/slug/` so relative asset and API URLs resolve correctly.
-
-## Publishing
+## Releases
 
 GitHub Actions runs `semantic-release` from `.github/workflows/publish-image.yml`.
 
-- pushes to `main` analyze commit messages and cut a release when needed
-- each release publishes GitHub release notes plus Docker image tags for `latest`, `<major>`, `<major>.<minor>`, and `<major>.<minor>.<patch>`
-- the Docker image version is derived from the semantic-release version, so Git tags, GitHub releases, and GHCR tags stay aligned
+Each release creates:
 
-If the repository lives at `stoparmy/crate`, the published image path is `ghcr.io/stoparmy/crate`.
+- a GitHub release
+- a `latest` image tag
+- semver image tags such as `<major>`, `<major>.<minor>`, and `<major>.<minor>.<patch>`
 
-Crate now expects Conventional Commit style messages on changes that should affect released versions:
+Release versions come from Conventional Commit messages on `main`:
 
-- `fix:` creates a patch release
-- `feat:` creates a minor release
-- `BREAKING CHANGE:` or `!` creates a major release
-
-Commits that do not match the configured release rules will not publish a new version.
-
-## First Release Checklist
-
-1. Enable GitHub Actions for the repository.
-2. Ensure the package visibility/settings for GHCR are acceptable for your audience.
-3. Merge or push a Conventional Commit to `main` to trigger the first semantic release.
-4. Confirm the resulting GitHub release and GHCR tags, for example `latest`, `1`, `1.2`, and `1.2.3`.
-5. Give downstream users the nginx snippet plus the required `CHATWOOT_BASE_URL` and `CHATWOOT_APP_TOKEN` settings.
+- `fix:` for patch releases
+- `feat:` for minor releases
+- `BREAKING CHANGE:` or `!` for major releases
