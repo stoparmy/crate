@@ -1,0 +1,12 @@
+services:
+  crate:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      PORT: ${PORT:-3000}
+      NODE_ENV: production
+      CHATWOOT_BASE_URL: ${CHATWOOT_BASE_URL}
+      CHATWOOT_APP_TOKEN: ${CHATWOOT_APP_TOKEN:-}
+    ports:
+      - "${HOST_PORT:-3000}:3000"

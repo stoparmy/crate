@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --background: 240 20% 99%;
+  --foreground: 210 12.5% 12.5%;
+  --card: 0 0% 99.6%;
+  --card-foreground: 210 12.5% 12.5%;
+  --popover: 0 0% 99.6%;
+  --popover-foreground: 210 12.5% 12.5%;
+  --primary: 213.9 92% 55.9%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 11.1% 94.7%;
+  --secondary-foreground: 210 12.5% 12.5%;
+  --muted: 240 11.1% 94.7%;
+  --muted-foreground: 220 5.9% 40%;
+  --accent: 210.8 100% 92.7%;
+  --accent-foreground: 214 80.4% 22%;
+  --destructive: 0 72.2% 50.6%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 10.1% 86.5%;
+  --input: 240 10.1% 86.5%;
+  --ring: 213.9 92% 55.9%;
+  --chart-1: 213.9 92% 55.9%;
+  --chart-2: 210.8 100% 92.7%;
+  --chart-3: 220 5.9% 40%;
+  --chart-4: 240 11.1% 94.7%;
+  --chart-5: 214 80.4% 22%;
+  --radius: 0.4rem;
+  --sidebar: 0 0% 96.9%;
+  --sidebar-foreground: 210 12.5% 12.5%;
+  --sidebar-primary: 213.9 92% 55.9%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210.8 100% 92.7%;
+  --sidebar-accent-foreground: 214 80.4% 22%;
+  --sidebar-border: 240 9.5% 91.8%;
+  --sidebar-ring: 213.9 92% 55.9%;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: 220 7% 8.4%;
+  --foreground: 220 9.1% 93.5%;
+  --card: 220 5.9% 10%;
+  --card-foreground: 220 9.1% 93.5%;
+  --popover: 220 5.9% 10%;
+  --popover-foreground: 220 9.1% 93.5%;
+  --primary: 213.9 92% 55.9%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 225 5.7% 13.7%;
+  --secondary-foreground: 220 9.1% 93.5%;
+  --muted: 225 5.7% 13.7%;
+  --muted-foreground: 216 6.8% 71%;
+  --accent: 220 14.8% 12%;
+  --accent-foreground: 213.6 100% 90.2%;
+  --destructive: 0 72.2% 50.6%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 213.3 7.7% 22.9%;
+  --input: 213.3 7.7% 22.9%;
+  --ring: 213.9 92% 55.9%;
+  --chart-1: 213.9 92% 55.9%;
+  --chart-2: 213.6 100% 90.2%;
+  --chart-3: 216 6.8% 71%;
+  --chart-4: 225 5.7% 13.7%;
+  --chart-5: 220 14.8% 12%;
+  --sidebar: 225 6.7% 11.8%;
+  --sidebar-foreground: 220 9.1% 93.5%;
+  --sidebar-primary: 213.9 92% 55.9%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 14.8% 12%;
+  --sidebar-accent-foreground: 213.6 100% 90.2%;
+  --sidebar-border: 210 7.1% 16.5%;
+  --sidebar-ring: 213.9 92% 55.9%;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    min-width: 320px;
+    font-family: Inter, -apple-system, system-ui, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Tahoma, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .radar-shell {
+    @apply min-h-screen p-4;
+  }
+
+  .radar-shell-compact {
+    @apply p-4;
+  }
+
+  .radar-flow {
+    @apply mx-auto flex max-w-5xl flex-col gap-4;
+  }
+}
