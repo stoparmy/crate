@@ -23,6 +23,17 @@ export function getErrorMessage(error: unknown) {
   }
 
   if (error instanceof Error) {
+    switch (error.message) {
+      case "popup_closed":
+        return "Окно авторизации Google Drive было закрыто до завершения входа.";
+      case "popup_failed_to_open":
+        return "Не удалось открыть окно авторизации Google Drive.";
+      case "google_drive_auth_failed":
+        return "Не удалось авторизоваться в Google Drive.";
+      default:
+        break;
+    }
+
     return error.message;
   }
 

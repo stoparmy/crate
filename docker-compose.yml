@@ -3,6 +3,11 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+      args:
+        CRATE_PUBLIC_BASE_PATH: ${CRATE_PUBLIC_BASE_PATH:-./}
+        CRATE_GOOGLE_DRIVE_SAVE_ALL_ENABLED: ${CRATE_GOOGLE_DRIVE_SAVE_ALL_ENABLED:-false}
+        CRATE_GOOGLE_DRIVE_CLIENT_ID: ${CRATE_GOOGLE_DRIVE_CLIENT_ID:-}
+        CRATE_GOOGLE_DRIVE_FOLDER_PREFIX: ${CRATE_GOOGLE_DRIVE_FOLDER_PREFIX:-Crate}
     environment:
       PORT: ${PORT:-3000}
       NODE_ENV: production
