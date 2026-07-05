@@ -1,8 +1,10 @@
 import path from "path";
+import fs from "fs";
 import express from "express";
 import { requireDashboardActor } from "./auth";
 import { errorHandler } from "./errors";
 import { embeddedRouter } from "./routes/embedded";
+import { buildRuntimeConfigScript } from "./runtimeConfig";
 
 function normalizeMountedRequestUrl(url: string) {
   if (url === "/" || url === "") {
@@ -40,6 +42,8 @@ function normalizeMountedRequestUrl(url: string) {
 export function createApp() {
   const app = express();
   const publicDir = path.resolve(__dirname, "..", "public");
+  const indexHtmlPath = path.join(publicDir, "index.html");
+  const indexHtmlTemplate = fs.readFileSync(indexHtmlPath, "utf8");
 
   app.set("trust proxy", 1);
   app.use(express.json());
@@ -54,9 +58,11 @@ export function createApp() {
 
   app.use("/api/embedded", requireDashboardActor, embeddedRouter);
 
-  app.use(express.static(publicDir));
+  app.use(express.static(publicDir, { index: false }));
   app.get("*", (_req, res) => {
-    res.sendFile(path.join(publicDir, "index.html"));
+    res.type("html").send(
+      indexHtmlTemplate.replace("</head>", `${buildRuntimeConfigScript()}</head>`),
+    );
   });
 
   app.use(errorHandler);

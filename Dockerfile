@@ -1,5 +1,7 @@
 # Build web
 FROM node:24-bookworm AS web-build
+ARG CRATE_PUBLIC_BASE_PATH=./
+ENV VITE_PUBLIC_BASE_PATH=${CRATE_PUBLIC_BASE_PATH}
 WORKDIR /app/web
 COPY web/package*.json ./
 RUN npm install

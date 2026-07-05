@@ -1,4 +1,5 @@
 import type { PagedMeta } from "./types";
+import { getRuntimeConfig } from "@/lib/runtimeConfig";
 
 export const defaultMeta: PagedMeta = {
   total: 0,
@@ -7,6 +8,12 @@ export const defaultMeta: PagedMeta = {
 };
 
 export const embeddedApiBase = new URL("./api/embedded", getMountedAppUrl()).pathname;
+const runtimeConfig = getRuntimeConfig();
+export const driveFolderSaveConfig = {
+  enabled: runtimeConfig.googleDriveSaveAllEnabled,
+  clientId: runtimeConfig.googleDriveClientId,
+  folderPrefix: runtimeConfig.googleDriveFolderPrefix,
+};
 
 function getMountedAppUrl() {
   const url = new URL(window.location.href);
