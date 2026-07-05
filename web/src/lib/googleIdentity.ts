@@ -85,10 +85,30 @@ export async function requestDriveAccessToken(input: {
 
   await loadGoogleIdentityServices();
 
+  try {
+    return await requestAccessToken({
+      clientId: input.clientId,
+      scope,
+      prompt: "",
+    });
+  } catch {
+    return requestAccessToken({
+      clientId: input.clientId,
+      scope,
+      prompt: "consent",
+    });
+  }
+}
+
+function requestAccessToken(input: {
+  clientId: string;
+  scope: string;
+  prompt: "" | "consent";
+}) {
   return new Promise<string>((resolve, reject) => {
     const tokenClient = window.google?.accounts?.oauth2?.initTokenClient({
       client_id: input.clientId,
-      scope,
+      scope: input.scope,
       callback: (response: TokenResponse) => {
         if (!response.access_token) {
           reject(
@@ -105,7 +125,7 @@ export async function requestDriveAccessToken(input: {
           accessToken: response.access_token,
           expiresAt:
             Date.now() + Math.max((response.expires_in || 0) - 60, 0) * 1000,
-          scope,
+          scope: input.scope,
         };
         resolve(response.access_token);
       },
@@ -120,8 +140,8 @@ export async function requestDriveAccessToken(input: {
     }
 
     tokenClient.requestAccessToken({
-      prompt: tokenCache ? "" : "consent",
-      scope,
+      prompt: input.prompt,
+      scope: input.scope,
     });
   });
 }

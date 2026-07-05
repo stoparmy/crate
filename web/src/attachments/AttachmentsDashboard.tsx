@@ -46,6 +46,8 @@ type SaveAllToDriveState =
     }
   | { status: "error"; message: string };
 
+const DRIVE_UPLOAD_CONCURRENCY = 4;
+
 export function AttachmentsDashboard() {
   const authHeaders = useMemo(() => getChatwootAuthHeaders(), []);
   const [context, setContext] = useState<DashboardContext | null>(null);
@@ -226,6 +228,53 @@ export function AttachmentsDashboard() {
     return response.blob();
   }
 
+  async function uploadAttachmentsToDriveFolder(input: {
+    accessToken: string;
+    attachments: ConversationAttachment[];
+    folderId: string;
+    folderName: string;
+  }) {
+    let nextIndex = 0;
+    let uploaded = 0;
+
+    const runWorker = async () => {
+      for (;;) {
+        const currentIndex = nextIndex;
+        nextIndex += 1;
+
+        if (currentIndex >= input.attachments.length) {
+          return;
+        }
+
+        const attachment = input.attachments[currentIndex];
+        const blob = await fetchAttachmentBlob(attachment);
+        await uploadDriveFile({
+          accessToken: input.accessToken,
+          blob,
+          name: attachment.fileName,
+          parentId: input.folderId,
+        });
+
+        uploaded += 1;
+        setSaveAllToDriveState({
+          status: "uploading",
+          folderName: input.folderName,
+          total: input.attachments.length,
+          uploaded,
+        });
+      }
+    };
+
+    const workerCount = Math.min(
+      DRIVE_UPLOAD_CONCURRENCY,
+      input.attachments.length,
+    );
+
+    await Promise.all(
+      Array.from({ length: workerCount }, () => runWorker()),
+    );
+  }
+
   function buildDriveFolderName(total: number) {
     const prefix = driveFolderSaveConfig.folderPrefix;
     const conversationId = context?.conversationId ?? "unknown";
@@ -278,24 +327,12 @@ export function AttachmentsDashboard() {
         total: allAttachments.length,
         uploaded: 0,
       });
-
-      for (let index = 0; index < allAttachments.length; index += 1) {
-        const attachment = allAttachments[index];
-        const blob = await fetchAttachmentBlob(attachment);
-        await uploadDriveFile({
-          accessToken,
-          blob,
-          name: attachment.fileName,
-          parentId: folder.id,
-        });
-
-        setSaveAllToDriveState({
-          status: "uploading",
-          folderName,
-          total: allAttachments.length,
-          uploaded: index + 1,
-        });
-      }
+      await uploadAttachmentsToDriveFolder({
+        accessToken,
+        attachments: allAttachments,
+        folderId: folder.id,
+        folderName,
+      });
 
       setSaveAllToDriveState({
         status: "success",
