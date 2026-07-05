@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 
 const version = process.argv[2];
 const repository = process.env.GITHUB_REPOSITORY;
+const branch = process.env.GITHUB_REF_NAME;
 
 if (!version) {
   throw new Error("Missing release version argument.");
@@ -11,14 +12,17 @@ if (!repository) {
   throw new Error("GITHUB_REPOSITORY is required.");
 }
 
-const [major, minor] = version.split(".");
-
-if (!major || !minor) {
+const versionMatch = version.match(/^(\d+)\.(\d+)\.(\d+)(-.+)?$/);
+if (!versionMatch) {
   throw new Error(`Unexpected semantic version: ${version}`);
 }
 
+const [, major, minor, patch, prereleaseSuffix] = versionMatch;
 const image = `ghcr.io/${repository.toLowerCase()}`;
-const tags = [`${image}:${version}`, `${image}:${major}.${minor}`, `${image}:${major}`, `${image}:latest`];
+const isPrerelease = Boolean(prereleaseSuffix);
+const tags = isPrerelease
+  ? [`${image}:${version}`, `${image}:${branch || "beta"}`]
+  : [`${image}:${version}`, `${image}:${major}.${minor}`, `${image}:${major}`, `${image}:latest`];
 const platforms = (process.env.DOCKER_PLATFORMS || "linux/amd64,linux/arm64")
   .split(",")
   .map((platform) => platform.trim())
@@ -27,6 +31,7 @@ const labels = [
   "org.opencontainers.image.source=https://github.com/" + repository,
   "org.opencontainers.image.revision=" + (process.env.GITHUB_SHA || ""),
   "org.opencontainers.image.version=" + version,
+  "org.opencontainers.image.ref.name=" + (branch || ""),
 ];
 
 const args = [

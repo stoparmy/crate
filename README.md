@@ -19,6 +19,10 @@ ghcr.io/stoparmy/crate
 - `CHATWOOT_BASE_URL`: публичный URL Chatwoot, например `https://helpdesk.example.org`
 - `CHATWOOT_APP_TOKEN`: токен приложения Chatwoot для установленного dashboard-приложения Crate
 - `PORT`: необязательный порт сервера, по умолчанию `3000`
+- `CRATE_GOOGLE_DRIVE_SAVE_ALL_ENABLED`: необязательный флаг `true/false`, включает кнопку сохранения всех файлов в папку Google Drive через Drive API
+- `CRATE_GOOGLE_DRIVE_CLIENT_ID`: OAuth Client ID для браузерного доступа к Google Drive API
+- `CRATE_GOOGLE_DRIVE_FOLDER_PREFIX`: необязательный префикс имени папки для массовой загрузки, по умолчанию `Crate`
+- `CRATE_PUBLIC_BASE_PATH`: необязательный базовый путь фронтенда во время сборки, например `/crate/` при проксировании под slug
 
 ## Локальная разработка
 
@@ -48,7 +52,19 @@ docker compose up --build
 docker run --rm -p 3000:3000 \
   -e CHATWOOT_BASE_URL=https://helpdesk.example.org \
   -e CHATWOOT_APP_TOKEN=your-chatwoot-app-token \
+  -e PORT=3000 \
   ghcr.io/stoparmy/crate:latest
+```
+
+Для включения Save to Drive при Docker-сборке передайте build args:
+
+```bash
+docker build \
+  --build-arg CRATE_GOOGLE_DRIVE_SAVE_ALL_ENABLED=true \
+  --build-arg CRATE_GOOGLE_DRIVE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com" \
+  --build-arg CRATE_GOOGLE_DRIVE_FOLDER_PREFIX="Stoparmy Helpdesk" \
+  --build-arg CRATE_PUBLIC_BASE_PATH=/crate/ \
+  -t crate:local .
 ```
 
 Проверка состояния:
@@ -100,6 +116,13 @@ GitHub Actions запускает `semantic-release` из `.github/workflows/pub
 - релиз на GitHub
 - тег образа `latest`
 - semver-теги образа, например `<major>`, `<major>.<minor>` и `<major>.<minor>.<patch>`
+
+Beta-ветка `beta` публикует prerelease-образы:
+
+- semver prerelease-тег, например `1.4.0-beta.1`
+- плавающий тег `beta`
+
+Beta-релизы не обновляют `latest`.
 
 Версия релиза определяется по Conventional Commit сообщениям в `main`:
 
