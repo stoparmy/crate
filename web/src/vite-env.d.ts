@@ -2,9 +2,6 @@
 
 interface ImportMetaEnv {
   readonly VITE_PUBLIC_BASE_PATH?: string;
-  readonly VITE_GOOGLE_DRIVE_SAVE_ALL_ENABLED?: string;
-  readonly VITE_GOOGLE_DRIVE_CLIENT_ID?: string;
-  readonly VITE_GOOGLE_DRIVE_FOLDER_PREFIX?: string;
 }
 
 interface ImportMeta {
@@ -12,6 +9,11 @@ interface ImportMeta {
 }
 
 interface Window {
+  __CRATE_RUNTIME_CONFIG__?: {
+    googleDriveSaveAllEnabled?: boolean;
+    googleDriveClientId?: string | null;
+    googleDriveFolderPrefix?: string | null;
+  };
   google?: {
     accounts?: {
       oauth2?: {

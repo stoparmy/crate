@@ -24,6 +24,8 @@ ghcr.io/stoparmy/crate
 - `CRATE_GOOGLE_DRIVE_FOLDER_PREFIX`: необязательный префикс имени папки для массовой загрузки, по умолчанию `Crate`
 - `CRATE_PUBLIC_BASE_PATH`: необязательный базовый путь фронтенда во время сборки, например `/crate/` при проксировании под slug
 
+Параметры `CRATE_GOOGLE_DRIVE_*` читаются во время запуска контейнера и попадают во фронтенд через runtime-конфиг. Пересборка образа для их изменения не требуется.
+
 ## Локальная разработка
 
 Установите зависимости:
@@ -56,15 +58,24 @@ docker run --rm -p 3000:3000 \
   ghcr.io/stoparmy/crate:latest
 ```
 
-Для включения Save to Drive при Docker-сборке передайте build args:
+Для сборки под фиксированный публичный slug передайте только `CRATE_PUBLIC_BASE_PATH` как build arg:
 
 ```bash
 docker build \
-  --build-arg CRATE_GOOGLE_DRIVE_SAVE_ALL_ENABLED=true \
-  --build-arg CRATE_GOOGLE_DRIVE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com" \
-  --build-arg CRATE_GOOGLE_DRIVE_FOLDER_PREFIX="Stoparmy Helpdesk" \
   --build-arg CRATE_PUBLIC_BASE_PATH=/crate/ \
   -t crate:local .
+```
+
+Save to Drive включается runtime-переменными запуска контейнера:
+
+```bash
+docker run --rm -p 3000:3000 \
+  -e CHATWOOT_BASE_URL=https://helpdesk.example.org \
+  -e CHATWOOT_APP_TOKEN=your-chatwoot-app-token \
+  -e CRATE_GOOGLE_DRIVE_SAVE_ALL_ENABLED=true \
+  -e CRATE_GOOGLE_DRIVE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com" \
+  -e CRATE_GOOGLE_DRIVE_FOLDER_PREFIX="Stoparmy Helpdesk" \
+  ghcr.io/stoparmy/crate:latest
 ```
 
 Проверка состояния:
