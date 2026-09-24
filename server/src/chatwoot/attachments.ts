@@ -66,7 +66,8 @@ export async function resolveConversationAttachments(input: {
 
 export async function fetchAttachmentContent(
   attachment: ChatwootAttachmentItem,
-  auth: DashboardAuthBundle
+  auth: DashboardAuthBundle,
+  signal?: AbortSignal
 ) {
   const targetUrl = new URL(attachment.downloadUrl, normalizedBaseUrl);
   if (targetUrl.origin !== normalizedBaseOrigin) {
@@ -75,7 +76,7 @@ export async function fetchAttachmentContent(
     });
   }
 
-  const response = await chatwootFetch(targetUrl.pathname + targetUrl.search, auth);
+  const response = await chatwootFetch(targetUrl.pathname + targetUrl.search, auth, { signal });
   return {
     response,
     contentType: response.headers.get("content-type") || attachment.contentType || "application/octet-stream",

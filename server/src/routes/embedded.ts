@@ -1,5 +1,3 @@
-import archiver from "archiver";
-import { Readable } from "stream";
 import { Router } from "express";
 import { getDashboardActor, getDashboardAuth } from "../auth";
 import {
@@ -9,6 +7,7 @@ import {
   resolveConversationAttachments,
 } from "../chatwoot/attachments";
 import { HttpError, route } from "../errors";
+import { streamBody, streamZip, withDownload } from "../downloads";
 
 export const embeddedRouter = Router();
 
@@ -54,19 +53,21 @@ embeddedRouter.get(
       attachmentIds: [attachmentId],
     });
 
-    const { response, contentType, contentLength } = await fetchAttachmentContent(attachment, auth);
-    const body = response.body;
-    if (!body) {
-      throw new HttpError(502, "attachment_download_failed");
-    }
+    await withDownload(res, async (signal) => {
+      const { response, contentType, contentLength } = await fetchAttachmentContent(attachment, auth, signal);
+      const body = response.body;
+      if (!body) {
+        throw new HttpError(502, "attachment_download_failed");
+      }
 
-    res.setHeader("Content-Type", contentType);
-    res.setHeader("Content-Disposition", formatContentDisposition(disposition, attachment.fileName));
-    if (contentLength) {
-      res.setHeader("Content-Length", contentLength);
-    }
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", formatContentDisposition(disposition, attachment.fileName));
+      if (contentLength) {
+        res.setHeader("Content-Length", contentLength);
+      }
 
-    Readable.fromWeb(body as any).pipe(res);
+      await streamBody(body, res, signal);
+    });
   })
 );
 
@@ -90,19 +91,21 @@ embeddedRouter.get(
 
     if (attachments.length === 1) {
       const [attachment] = attachments;
-      const { response, contentType, contentLength } = await fetchAttachmentContent(attachment, auth);
-      const body = response.body;
-      if (!body) {
-        throw new HttpError(502, "attachment_download_failed");
-      }
+      await withDownload(res, async (signal) => {
+        const { response, contentType, contentLength } = await fetchAttachmentContent(attachment, auth, signal);
+        const body = response.body;
+        if (!body) {
+          throw new HttpError(502, "attachment_download_failed");
+        }
 
-      res.setHeader("Content-Type", contentType);
-      res.setHeader("Content-Disposition", formatContentDisposition("attachment", attachment.fileName));
-      if (contentLength) {
-        res.setHeader("Content-Length", contentLength);
-      }
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Content-Disposition", formatContentDisposition("attachment", attachment.fileName));
+        if (contentLength) {
+          res.setHeader("Content-Length", contentLength);
+        }
 
-      Readable.fromWeb(body as any).pipe(res);
+        await streamBody(body, res, signal);
+      });
       return;
     }
 
@@ -110,25 +113,23 @@ embeddedRouter.get(
     res.setHeader("Content-Type", "application/zip");
     res.setHeader("Content-Disposition", formatContentDisposition("attachment", archiveName));
 
-    const archive = archiver("zip", { zlib: { level: 9 } });
-    archive.on("error", (error) => {
-      throw error;
-    });
-    archive.pipe(res);
-
-    const usedNames = new Set<string>();
-    for (const attachment of attachments) {
-      const { response } = await fetchAttachmentContent(attachment, auth);
-      const body = response.body;
-      if (!body) {
-        throw new HttpError(502, "attachment_download_failed");
+    await withDownload(res, async (signal) => {
+      async function* entries() {
+        const usedNames = new Set<string>();
+        for (const attachment of attachments) {
+          signal.throwIfAborted();
+          const { response } = await fetchAttachmentContent(attachment, auth, signal);
+          if (!response.body) {
+            throw new HttpError(502, "attachment_download_failed");
+          }
+          yield {
+            name: makeUniqueFileName(usedNames, attachment.fileName),
+            body: response.body,
+          };
+        }
       }
-
-      const entryName = makeUniqueFileName(usedNames, attachment.fileName);
-      archive.append(Readable.fromWeb(body as any), { name: entryName });
-    }
-
-    await archive.finalize();
+      await streamZip(entries(), res, signal);
+    });
   })
 );
 

@@ -22,6 +22,13 @@ export function route(
 }
 
 export function errorHandler(error: unknown, _req: Request, res: Response, _next: NextFunction) {
+  // A failed pipeline may already have closed the response. Never append JSON
+  // to a partially sent file (or try to replace its headers).
+  if (res.destroyed) return;
+  if (res.headersSent) return _next(error);
+  res.removeHeader("Content-Length");
+  res.removeHeader("Content-Disposition");
+  res.removeHeader("Content-Type");
   if (error instanceof HttpError) {
     console.error("crate_http_error", {
       status: error.status,
