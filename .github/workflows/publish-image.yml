@@ -48,6 +48,9 @@ jobs:
       - name: Install release dependencies
         run: npm ci
 
+      - name: Test attachment streaming
+        run: npm ci --prefix server && npm test --prefix server
+
       - name: Run semantic-release
         env:
           DOCKER_PLATFORMS: linux/amd64,linux/arm64
