@@ -1,0 +1,10 @@
+# Refresh only Node/OS while preserving an already released application image.
+# Supply an immutable digest or retained local image tag as APP_IMAGE.
+ARG APP_IMAGE
+FROM ${APP_IMAGE} AS application
+FROM node:24.22.1-bookworm
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=application /app/ /app/
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
