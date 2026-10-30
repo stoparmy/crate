@@ -2,7 +2,7 @@
 # Supply an immutable digest or retained local image tag as APP_IMAGE.
 ARG APP_IMAGE
 FROM ${APP_IMAGE} AS application
-FROM node:24.22.1-bookworm
+FROM node:24.22.2-bookworm@sha256:e7add2a490bb17d97b485b8641bd88455fff7839ade0f5eba493c3508124d413
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=application /app/ /app/
